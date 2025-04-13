@@ -14,11 +14,11 @@ class OmniVideoController {
   final bool mixAudio;
   late final OmniVideoValue value;
 
-  late final media_kit.Player _iosPlayer;
-  late final media_kit_video.VideoController _iosController;
+  late final media_kit.Player iosPlayer;
+  late final media_kit_video.VideoController iosController;
   final Map<void Function(), StreamSubscription<dynamic>> _iosListeners = {};
 
-  late final video_player.VideoPlayerController _androidController;
+  late final video_player.VideoPlayerController androidController;
 
   OmniVideoController({
     required this.url,
@@ -27,16 +27,16 @@ class OmniVideoController {
     this.mixAudio = false,
   });
 
-  void initalize() async {
+  Future<void> initialize() async {
     value = OmniVideoValue(this);
 
     if (Platform.isIOS) {
-      _iosPlayer = media_kit.Player();
-      _iosController = media_kit_video.VideoController(_iosPlayer);
-      await _iosPlayer.open(media_kit.Media(url, httpHeaders: httpHeaders));
+      iosPlayer = media_kit.Player();
+      iosController = media_kit_video.VideoController(iosPlayer);
+      await iosPlayer.open(media_kit.Media(url, httpHeaders: httpHeaders));
       value.iosInitialized = true;
     } else {
-      _androidController = video_player.VideoPlayerController.networkUrl(
+      androidController = video_player.VideoPlayerController.networkUrl(
         Uri.parse(url),
         httpHeaders: httpHeaders,
         videoPlayerOptions: video_player.VideoPlayerOptions(
@@ -56,9 +56,9 @@ class OmniVideoController {
   void dispose() async {
     try {
       if (Platform.isIOS) {
-        await _iosPlayer.dispose();
+        await iosPlayer.dispose();
       } else {
-        await _androidController.dispose();
+        await androidController.dispose();
       }
     } catch (e) {
       // pass
@@ -72,12 +72,12 @@ class OmniVideoController {
 
   void addPositionListener(void Function() listener) {
     if (Platform.isIOS) {
-      final subscription = _iosController.player.stream.position.listen(
+      final subscription = iosController.player.stream.position.listen(
         (_) => listener(),
       );
       _iosListeners[listener] = subscription;
     } else {
-      _androidController.addListener(listener);
+      androidController.addListener(listener);
     }
   }
 
@@ -88,49 +88,49 @@ class OmniVideoController {
         subscription.cancel();
       }
     } else {
-      _androidController.removeListener(listener);
+      androidController.removeListener(listener);
     }
   }
 
   Future<void> play() {
     if (Platform.isIOS) {
-      return _iosPlayer.play();
+      return iosPlayer.play();
     } else {
-      return _androidController.play();
+      return androidController.play();
     }
   }
 
   Future<void> pause() {
     if (Platform.isIOS) {
-      return _iosPlayer.pause();
+      return iosPlayer.pause();
     } else {
-      return _androidController.pause();
+      return androidController.pause();
     }
   }
 
   Future<void> seekTo(Duration position) {
     if (Platform.isIOS) {
-      return _iosPlayer.seek(position);
+      return iosPlayer.seek(position);
     } else {
-      return _androidController.seekTo(position);
+      return androidController.seekTo(position);
     }
   }
 
   Future<void> setLooping(bool looping) {
     if (Platform.isIOS) {
-      return _iosPlayer.setPlaylistMode(
+      return iosPlayer.setPlaylistMode(
         looping ? media_kit.PlaylistMode.loop : media_kit.PlaylistMode.none,
       );
     } else {
-      return _androidController.setLooping(looping);
+      return androidController.setLooping(looping);
     }
   }
 
   Future<void> setVolume(double volume) {
     if (Platform.isIOS) {
-      return _iosPlayer.setVolume(volume * 100);
+      return iosPlayer.setVolume(volume * 100);
     } else {
-      return _androidController.setVolume(volume);
+      return androidController.setVolume(volume);
     }
   }
 }
@@ -145,47 +145,57 @@ class OmniVideoValue {
     if (Platform.isIOS) {
       return iosInitialized;
     } else {
-      return ctl._androidController.value.isInitialized;
+      return ctl.androidController.value.isInitialized;
     }
   }
 
   bool get isPlaying {
     if (Platform.isIOS) {
-      return ctl._iosPlayer.state.playing;
+      return ctl.iosPlayer.state.playing;
     } else {
-      return ctl._androidController.value.isPlaying;
+      return ctl.androidController.value.isPlaying;
     }
   }
 
   Duration get duration {
     if (Platform.isIOS) {
-      return ctl._iosPlayer.state.duration;
+      return ctl.iosPlayer.state.duration;
     } else {
-      return ctl._androidController.value.duration;
+      return ctl.androidController.value.duration;
     }
   }
 
   Duration get position {
     if (Platform.isIOS) {
-      return ctl._iosPlayer.state.position;
+      return ctl.iosPlayer.state.position;
     } else {
-      return ctl._androidController.value.position;
+      return ctl.androidController.value.position;
     }
   }
 
   Size get size {
     if (Platform.isIOS) {
-      final w = ctl._iosPlayer.state.width ?? 100;
-      final h = ctl._iosPlayer.state.height ?? 100;
+      final w = ctl.iosPlayer.state.width ?? 100;
+      final h = ctl.iosPlayer.state.height ?? 100;
       return Size(w.toDouble(), h.toDouble());
     } else {
-      return ctl._androidController.value.size;
+      return ctl.androidController.value.size;
+    }
+  }
+
+  double get aspectRatio {
+    if (Platform.isIOS) {
+      final w = ctl.iosPlayer.state.width ?? 100;
+      final h = ctl.iosPlayer.state.height ?? 100;
+      return w.toDouble() / h.toDouble();
+    } else {
+      return ctl.androidController.value.aspectRatio;
     }
   }
 
   bool get isBuffering {
     if (Platform.isIOS) {
-      return ctl._iosPlayer.state.buffering;
+      return ctl.iosPlayer.state.buffering;
     } else {
       /// Gets the current buffering state of the video player.
       ///
@@ -196,18 +206,18 @@ class OmniVideoValue {
       ///
       /// For this, the actual buffer position is used to determine if the video is
       /// buffering or not. See Issue [#912](https://github.com/fluttercommunity/chewie/pull/912) for more details.
-      if (ctl._androidController.value.isBuffering) {
+      if (ctl.androidController.value.isBuffering) {
         // -> Check if we actually buffer, as android has a bug preventing to
         //    get the correct buffering state from this single bool.
-        final int position = ctl._androidController.value.position.inMilliseconds;
+        final int position = ctl.androidController.value.position.inMilliseconds;
 
         // Special case, if the video is finished, we don't want to show the
         // buffering indicator anymore
-        if (position >= ctl._androidController.value.duration.inMilliseconds) {
+        if (position >= ctl.androidController.value.duration.inMilliseconds) {
           return false;
         } else {
           final int buffer =
-              ctl._androidController.value.buffered.lastOrNull?.end.inMilliseconds ?? -1;
+              ctl.androidController.value.buffered.lastOrNull?.end.inMilliseconds ?? -1;
 
           return position >= buffer;
         }

@@ -7,7 +7,6 @@ import 'package:chewie/src/models/subtitle_model.dart';
 import 'package:chewie/src/notifiers/player_notifier.dart';
 import 'package:chewie/src/omni_video_controller.dart';
 import 'package:chewie/src/player_with_controls.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -168,10 +167,6 @@ class ChewieState extends State<Chewie> {
       rootNavigator: widget.controller.useRootNavigator,
     ).push(route);
 
-    if (kIsWeb) {
-      _reInitializeControllers();
-    }
-
     _isFullScreen = false;
     widget.controller.exitFullScreen();
 
@@ -238,18 +233,6 @@ class ChewieState extends State<Chewie> {
       }
     }
   }
-
-  ///When viewing full screen on web, returning from full screen causes original video to lose the picture.
-  ///We re initialise controllers for web only when returning from full screen
-  void _reInitializeControllers() {
-    final prevPosition = widget.controller.videoPlayerController.value.position;
-    widget.controller.videoPlayerController.initialize().then((_) async {
-      widget.controller._initialize();
-      widget.controller.videoPlayerController.seekTo(prevPosition);
-      await widget.controller.videoPlayerController.play();
-      widget.controller.videoPlayerController.pause();
-    });
-  }
 }
 
 /// The ChewieController is used to configure and drive the Chewie Player
@@ -266,7 +249,6 @@ class ChewieController extends ChangeNotifier {
   ChewieController({
     required this.videoPlayerController,
     this.optionsTranslation,
-    this.aspectRatio,
     this.autoInitialize = false,
     this.autoPlay = false,
     this.draggableProgressBar = true,
@@ -319,7 +301,6 @@ class ChewieController extends ChangeNotifier {
   ChewieController copyWith({
     OmniVideoController? videoPlayerController,
     OptionsTranslation? optionsTranslation,
-    double? aspectRatio,
     bool? autoInitialize,
     bool? autoPlay,
     bool? draggableProgressBar,
@@ -373,7 +354,6 @@ class ChewieController extends ChangeNotifier {
       videoPlayerController:
           videoPlayerController ?? this.videoPlayerController,
       optionsTranslation: optionsTranslation ?? this.optionsTranslation,
-      aspectRatio: aspectRatio ?? this.aspectRatio,
       autoInitialize: autoInitialize ?? this.autoInitialize,
       autoPlay: autoPlay ?? this.autoPlay,
       startAt: startAt ?? this.startAt,
@@ -511,12 +491,6 @@ class ChewieController extends ChangeNotifier {
   /// When the video is buffering, you can build a custom widget.
   final WidgetBuilder? bufferingBuilder;
 
-  /// The Aspect Ratio of the Video. Important to get the correct size of the
-  /// video!
-  ///
-  /// Will fallback to fitting within the space allowed.
-  final double? aspectRatio;
-
   /// The colors to use for controls on iOS. By default, the iOS player uses
   /// colors sampled from the original iOS 11 designs.
   final ChewieProgressColors? cupertinoProgressColors;
@@ -612,26 +586,11 @@ class ChewieController extends ChangeNotifier {
     }
 
     if (autoPlay) {
-      if (fullScreenByDefault) {
-        enterFullScreen();
-      }
-
       await videoPlayerController.play();
     }
 
     if (startAt != null) {
       await videoPlayerController.seekTo(startAt!);
-    }
-
-    if (fullScreenByDefault) {
-      videoPlayerController.addListener(_fullScreenListener);
-    }
-  }
-
-  Future<void> _fullScreenListener() async {
-    if (videoPlayerController.value.isPlaying && !_isFullScreen) {
-      enterFullScreen();
-      videoPlayerController.removeListener(_fullScreenListener);
     }
   }
 

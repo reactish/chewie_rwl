@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:chewie/src/chewie_player.dart';
 import 'package:chewie/src/notifiers/index.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:video_player/video_player.dart';
+import 'package:media_kit_video/media_kit_video.dart' as media_kit_video;
+import 'package:video_player/video_player.dart' as video_player;
 
 class PlayerWithControls extends StatelessWidget {
   const PlayerWithControls({super.key});
@@ -39,10 +42,16 @@ class PlayerWithControls extends StatelessWidget {
             scaleEnabled: chewieController.zoomAndPan,
             child: Center(
               child: AspectRatio(
-                aspectRatio:
-                    chewieController.aspectRatio ??
-                    chewieController.videoPlayerController.value.aspectRatio,
-                child: VideoPlayer(chewieController.videoPlayerController),
+                aspectRatio: chewieController.videoPlayerController.value.aspectRatio,
+                child:
+                    Platform.isIOS
+                        ? media_kit_video.Video(
+                          controller:
+                              chewieController.videoPlayerController.iosController,
+                        )
+                        : video_player.VideoPlayer(
+                          chewieController.videoPlayerController.androidController,
+                        ),
               ),
             ),
           ),
