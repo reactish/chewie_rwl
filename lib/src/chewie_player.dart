@@ -5,12 +5,12 @@ import 'package:chewie/src/models/option_item.dart';
 import 'package:chewie/src/models/options_translation.dart';
 import 'package:chewie/src/models/subtitle_model.dart';
 import 'package:chewie/src/notifiers/player_notifier.dart';
+import 'package:chewie/src/omni_video_controller.dart';
 import 'package:chewie/src/player_with_controls.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:video_player/video_player.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 typedef ChewieRoutePageBuilder = Widget Function(
@@ -290,7 +290,7 @@ class ChewieController extends ChangeNotifier {
     this.subtitle,
     this.showSubtitles = false,
     this.subtitleBuilder,
-    this.customControls,
+    required this.customControls,
     this.errorBuilder,
     this.bufferingBuilder,
     this.allowedScreenSleep = true,
@@ -317,7 +317,7 @@ class ChewieController extends ChangeNotifier {
   }
 
   ChewieController copyWith({
-    VideoPlayerController? videoPlayerController,
+    OmniVideoController? videoPlayerController,
     OptionsTranslation? optionsTranslation,
     double? aspectRatio,
     bool? autoInitialize,
@@ -467,7 +467,7 @@ class ChewieController extends ChangeNotifier {
   bool showSubtitles;
 
   /// The controller for the video you want to play
-  final VideoPlayerController videoPlayerController;
+  final OmniVideoController videoPlayerController;
 
   /// Initialize the Video on Startup. This will prep the video for playback.
   final bool autoInitialize;
@@ -501,7 +501,7 @@ class ChewieController extends ChangeNotifier {
 
   /// Defines customised controls. Check [MaterialControls] or
   /// [CupertinoControls] for reference.
-  final Widget? customControls;
+  final Widget customControls;
 
   /// When the video playback runs into an error, you can build a custom
   /// error message.

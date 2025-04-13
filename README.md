@@ -6,10 +6,10 @@
 ![CI](https://github.com/brianegan/chewie/workflows/CI/badge.svg)
 [![Generic badge](https://img.shields.io/badge/platform-android%20|%20ios%20|%20web%20-blue.svg)](https://pub.dev/packages/chewie)
 
-The video player for Flutter with a heart of gold. 
+The video player for Flutter with a heart of gold.
 
-The [`video_player`](https://pub.dartlang.org/packages/video_player) plugin provides low-level 
-access to video playback. 
+The [`video_player`](https://pub.dartlang.org/packages/video_player) plugin provides low-level
+access to video playback.
 
 Chewie uses the `video_player` under the hood and wraps it in a friendly Material or Cupertino UI!
 
@@ -29,17 +29,17 @@ Chewie uses the `video_player` under the hood and wraps it in a friendly Materia
 
 
 ## 🚨 IMPORTANT!!! (READ THIS FIRST)
-This library is __NOT__ responsible for any issues caused by `video_player`, since it's merely a UI 
-layer on top of it. 
+This library is __NOT__ responsible for any issues caused by `video_player`, since it's merely a UI
+layer on top of it.
 
 In other words, if you see any `PlatformException`s being thrown in your app due to video playback,
-they are exclusive to the `video_player` library. 
+they are exclusive to the `video_player` library.
 
 Instead, please raise an issue related to it with the [Flutter Team](https://github.com/flutter/flutter/issues/new/choose).
 
 ## 🔀 Flutter Version Compatibility
 
-This library will at the very least make a solid effort to support the second most recent version 
+This library will at the very least make a solid effort to support the second most recent version
 of Flutter released. In other words, it will adopt `N-1` version support at
 the bare minimum.
 
@@ -69,7 +69,6 @@ dependencies:
 
 ```dart
 import 'package:chewie/chewie.dart';
-import 'package:video_player/video_player.dart';
 
 final videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(
     'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4'));
@@ -151,7 +150,7 @@ Your `additionalOptions` are already included here (if you provided `additionalO
 
 ### Translations
 
-What is an option without proper translation? 
+What is an option without proper translation?
 
 To add your translation strings add:
 
@@ -278,7 +277,7 @@ final playerWidget = Chewie(
 - [x] Custom Progress-Bar colors
 - [x] Custom Overlay
 - [x] Allow Sleep (Wakelock)
-- [x] Playbackspeed Control 
+- [x] Playbackspeed Control
 - [x] Custom Route-Pagebuilder
 - [x] Custom Device-Orientation and SystemOverlay before and after fullscreen
 - [x] Custom ErrorBuilder
@@ -323,7 +322,7 @@ _chewieController = ChewieController(
 );
 ```
 
-## 📱 iOS warning 
+## 📱 iOS warning
 
 The video_player plugin used by chewie will only work in iOS simulators if you are on flutter 1.26.0 or above. You may need to switch to the beta channel `flutter channel beta`
 Please refer to this [issue](https://github.com/flutter/flutter/issues/14647).

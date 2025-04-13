@@ -24,7 +24,7 @@ extension ColorCompatExtensions on Color {
     // version compatibility).
     // Once it's removed from a future update, we'll have to replace uses of
     // this method with withValues(alpha: opacity).
-    // TODO: Replace this bridge method once the above holds true.
+    // Replace this bridge method once the above holds true.
     return withOpacity(opacity);
   }
 }
