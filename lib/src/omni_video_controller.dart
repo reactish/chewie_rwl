@@ -231,9 +231,10 @@ class OmniVideoValue {
     }
   }
 
+  // from 0 to 1
   double get volume {
     if (Platform.isIOS) {
-      return ctl.iosPlayer.state.volume;
+      return ctl.iosPlayer.state.volume / 100.0;
     } else {
       return ctl.androidController.value.volume;
     }
