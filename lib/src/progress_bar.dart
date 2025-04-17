@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:chewie/chewie.dart';
 import 'package:chewie/src/omni_video_controller.dart';
 import 'package:flutter/material.dart';
@@ -59,9 +61,9 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
   }
 
   void _seekToRelativePosition(Offset globalPosition) {
-    controller.seekTo(
-      context.calcRelativePosition(controller.value.duration, globalPosition),
-    );
+    final end = Duration(milliseconds: controller.value.duration.inMilliseconds - 1000);
+    final seek = context.calcRelativePosition(controller.value.duration, globalPosition);
+    controller.seekTo(seek < end ? seek : end);
   }
 
   @override

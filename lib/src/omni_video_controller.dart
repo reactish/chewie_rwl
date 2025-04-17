@@ -1,11 +1,17 @@
 import 'dart:async';
 import 'dart:io' show Platform;
 
+import 'package:async/async.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart' as video_player;
 import 'package:media_kit/media_kit.dart' as media_kit;
 import 'package:media_kit_video/media_kit_video.dart' as media_kit_video;
 import 'package:wakelock_plus/wakelock_plus.dart';
+
+// You must manually call this in the client app's main() if using mediakit
+void initializeMediaKit() {
+  media_kit.MediaKit.ensureInitialized();
+}
 
 class OmniVideoController {
   final String url;
@@ -13,6 +19,8 @@ class OmniVideoController {
   final bool backgroundPlayback;
   final bool mixAudio;
   late final OmniVideoValue value;
+  bool hasInitBeenCalled = false;
+  bool hasDisposeBeenCalled = false;
 
   late final media_kit.Player iosPlayer;
   late final media_kit_video.VideoController iosController;
@@ -25,15 +33,19 @@ class OmniVideoController {
     this.httpHeaders = const {},
     this.backgroundPlayback = false,
     this.mixAudio = false,
-  });
+  }) {
+    value = OmniVideoValue(this);
+  }
 
   Future<void> initialize() async {
-    value = OmniVideoValue(this);
-
+    if (hasInitBeenCalled) {
+      return;
+    }
+    hasInitBeenCalled = true;
     if (Platform.isIOS) {
       iosPlayer = media_kit.Player();
       iosController = media_kit_video.VideoController(iosPlayer);
-      await iosPlayer.open(media_kit.Media(url, httpHeaders: httpHeaders));
+      await iosPlayer.open(media_kit.Media(url, httpHeaders: httpHeaders), play: true);
       value.iosInitialized = true;
     } else {
       androidController = video_player.VideoPlayerController.networkUrl(
@@ -44,7 +56,7 @@ class OmniVideoController {
           mixWithOthers: mixAudio,
         ),
       );
-      // todo probably initialize android manually ?? maybe idk
+      await androidController.initialize();
     }
     try {
       await WakelockPlus.enable();
@@ -53,7 +65,11 @@ class OmniVideoController {
     }
   }
 
-  void dispose() async {
+  Future<void> dispose() async {
+    if (hasDisposeBeenCalled) {
+      return;
+    }
+    hasDisposeBeenCalled = true;
     try {
       if (Platform.isIOS) {
         await iosPlayer.dispose();
@@ -70,11 +86,30 @@ class OmniVideoController {
     }
   }
 
+  void addStateListener(void Function() listener) {
+    if (Platform.isIOS) {
+      final merged = StreamGroup.merge([
+        iosPlayer.stream.buffering,
+        iosPlayer.stream.bufferingPercentage,
+        iosPlayer.stream.completed,
+        iosPlayer.stream.duration,
+        iosPlayer.stream.error,
+        iosPlayer.stream.playing,
+        iosPlayer.stream.position,
+        iosPlayer.stream.rate,
+        iosPlayer.stream.volume,
+      ]);
+
+      final subscription = merged.listen((_) => listener());
+      _iosListeners[listener] = subscription;
+    } else {
+      androidController.addListener(listener);
+    }
+  }
+
   void addPositionListener(void Function() listener) {
     if (Platform.isIOS) {
-      final subscription = iosController.player.stream.position.listen(
-        (_) => listener(),
-      );
+      final subscription = iosController.player.stream.position.listen((_) => listener());
       _iosListeners[listener] = subscription;
     } else {
       androidController.addListener(listener);
@@ -133,6 +168,14 @@ class OmniVideoController {
       return androidController.setVolume(volume);
     }
   }
+
+  Future<void> setPlaybackSpeed(double speed) {
+    if (Platform.isIOS) {
+      return iosPlayer.setRate(speed);
+    } else {
+      return androidController.setPlaybackSpeed(speed);
+    }
+  }
 }
 
 class OmniVideoValue {
@@ -142,10 +185,14 @@ class OmniVideoValue {
   OmniVideoValue(this.ctl);
 
   bool get isInitialized {
-    if (Platform.isIOS) {
-      return iosInitialized;
+    if (ctl.hasInitBeenCalled) {
+      if (Platform.isIOS) {
+        return iosInitialized;
+      } else {
+        return ctl.androidController.value.isInitialized;
+      }
     } else {
-      return ctl.androidController.value.isInitialized;
+      return false;
     }
   }
 
@@ -193,6 +240,22 @@ class OmniVideoValue {
     }
   }
 
+  double get volume {
+    if (Platform.isIOS) {
+      return ctl.iosPlayer.state.volume;
+    } else {
+      return ctl.androidController.value.volume;
+    }
+  }
+
+  double get playbackSpeed {
+    if (Platform.isIOS) {
+      return ctl.iosPlayer.state.rate;
+    } else {
+      return ctl.androidController.value.playbackSpeed;
+    }
+  }
+
   bool get isBuffering {
     if (Platform.isIOS) {
       return ctl.iosPlayer.state.buffering;
@@ -224,6 +287,22 @@ class OmniVideoValue {
       } else {
         return false;
       }
+    }
+  }
+
+  bool get hasError {
+    if (Platform.isIOS) {
+      return false;
+    } else {
+      return ctl.androidController.value.hasError;
+    }
+  }
+
+  String? get errorDescription {
+    if (Platform.isIOS) {
+      return null;
+    } else {
+      return ctl.androidController.value.errorDescription;
     }
   }
 }
