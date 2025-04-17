@@ -107,15 +107,6 @@ class OmniVideoController {
     }
   }
 
-  void addPositionListener(void Function() listener) {
-    if (Platform.isIOS) {
-      final subscription = iosController.player.stream.position.listen((_) => listener());
-      _iosListeners[listener] = subscription;
-    } else {
-      androidController.addListener(listener);
-    }
-  }
-
   void removeListener(void Function() listener) {
     if (Platform.isIOS) {
       final subscription = _iosListeners.remove(listener);

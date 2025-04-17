@@ -51,7 +51,7 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
   @override
   void initState() {
     super.initState();
-    controller.addPositionListener(listener);
+    controller.addStateListener(listener);
   }
 
   @override
