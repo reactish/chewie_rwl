@@ -39,15 +39,23 @@ class Chewie extends StatefulWidget {
 }
 
 class ChewieState extends State<Chewie> {
-  bool initialized = false;
+  double exoAspectRatio = 9 / 16;
 
   @override
   void initState() {
     super.initState();
-    widget.controller.videoPlayerController.initialize().then((_) {
-      setState(() {
-        initialized = true; // Update the state
+    if (Platform.isAndroid) {
+      widget.controller.videoPlayerController.addStateListener(() {
+        final newAspectRatio = widget.controller.videoPlayerController.value.aspectRatio;
+        if (mounted && newAspectRatio != exoAspectRatio) {
+          setState(() {
+            exoAspectRatio = newAspectRatio;
+          });
+        }
       });
+    }
+
+    widget.controller.videoPlayerController.initialize().then((_) {
       widget.controller.videoPlayerController.play();
     });
   }
@@ -94,10 +102,7 @@ class ChewieState extends State<Chewie> {
                     )
                     : Center(
                       child: AspectRatio(
-                        aspectRatio:
-                            initialized
-                                ? chewieController.videoPlayerController.value.aspectRatio
-                                : 9 / 16,
+                        aspectRatio: exoAspectRatio,
                         child: video_player.VideoPlayer(
                           chewieController.videoPlayerController.androidController,
                         ),
