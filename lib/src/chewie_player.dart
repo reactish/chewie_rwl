@@ -39,7 +39,7 @@ class Chewie extends StatefulWidget {
 }
 
 class ChewieState extends State<Chewie> {
-  double exoAspectRatio = 9 / 16;
+  double exoAspectRatio = 9 / 18;
 
   @override
   void initState() {
@@ -96,7 +96,7 @@ class ChewieState extends State<Chewie> {
             panEnabled: chewieController.zoomAndPan,
             scaleEnabled: chewieController.zoomAndPan,
             child:
-                Platform.isIOS
+                alwaysUseMediaKit || Platform.isIOS
                     ? media_kit_video.Video(
                       controller: chewieController.videoPlayerController.iosController,
                       controls: media_kit_video.NoVideoControls,

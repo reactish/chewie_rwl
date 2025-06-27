@@ -8,8 +8,11 @@ import 'package:media_kit/media_kit.dart' as media_kit;
 import 'package:media_kit_video/media_kit_video.dart' as media_kit_video;
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+var alwaysUseMediaKit = false;
+
 // You must manually call this in the client app's main() if using mediakit
-void initializeMediaKit() {
+void initializeMediaKit(bool useMediaKit) {
+  alwaysUseMediaKit = useMediaKit;
   media_kit.MediaKit.ensureInitialized();
 }
 
@@ -42,7 +45,7 @@ class OmniVideoController {
       return;
     }
     hasInitBeenCalled = true;
-    if (Platform.isIOS) {
+    if (alwaysUseMediaKit || Platform.isIOS) {
       iosPlayer = media_kit.Player();
       iosController = media_kit_video.VideoController(iosPlayer);
       await iosPlayer.open(media_kit.Media(url, httpHeaders: httpHeaders), play: true);
@@ -71,7 +74,7 @@ class OmniVideoController {
     }
     hasDisposeBeenCalled = true;
     try {
-      if (Platform.isIOS) {
+      if (alwaysUseMediaKit || Platform.isIOS) {
         await iosPlayer.dispose();
       } else {
         await androidController.dispose();
@@ -87,7 +90,7 @@ class OmniVideoController {
   }
 
   void addStateListener(void Function() listener) {
-    if (Platform.isIOS) {
+    if (alwaysUseMediaKit || Platform.isIOS) {
       final merged = StreamGroup.merge([
         iosPlayer.stream.buffering,
         iosPlayer.stream.bufferingPercentage,
@@ -108,7 +111,7 @@ class OmniVideoController {
   }
 
   void removeListener(void Function() listener) {
-    if (Platform.isIOS) {
+    if (alwaysUseMediaKit || Platform.isIOS) {
       final subscription = _iosListeners.remove(listener);
       if (subscription != null) {
         subscription.cancel();
@@ -119,7 +122,7 @@ class OmniVideoController {
   }
 
   Future<void> play() {
-    if (Platform.isIOS) {
+    if (alwaysUseMediaKit || Platform.isIOS) {
       return iosPlayer.play();
     } else {
       return androidController.play();
@@ -127,7 +130,7 @@ class OmniVideoController {
   }
 
   Future<void> pause() {
-    if (Platform.isIOS) {
+    if (alwaysUseMediaKit || Platform.isIOS) {
       return iosPlayer.pause();
     } else {
       return androidController.pause();
@@ -135,7 +138,7 @@ class OmniVideoController {
   }
 
   Future<void> seekTo(Duration position) {
-    if (Platform.isIOS) {
+    if (alwaysUseMediaKit || Platform.isIOS) {
       return iosPlayer.seek(position);
     } else {
       return androidController.seekTo(position);
@@ -143,7 +146,7 @@ class OmniVideoController {
   }
 
   Future<void> setLooping(bool looping) {
-    if (Platform.isIOS) {
+    if (alwaysUseMediaKit || Platform.isIOS) {
       return iosPlayer.setPlaylistMode(
         looping ? media_kit.PlaylistMode.loop : media_kit.PlaylistMode.none,
       );
@@ -153,7 +156,7 @@ class OmniVideoController {
   }
 
   Future<void> setVolume(double volume) {
-    if (Platform.isIOS) {
+    if (alwaysUseMediaKit || Platform.isIOS) {
       return iosPlayer.setVolume(volume * 100);
     } else {
       return androidController.setVolume(volume);
@@ -161,7 +164,7 @@ class OmniVideoController {
   }
 
   Future<void> setPlaybackSpeed(double speed) {
-    if (Platform.isIOS) {
+    if (alwaysUseMediaKit || Platform.isIOS) {
       return iosPlayer.setRate(speed);
     } else {
       return androidController.setPlaybackSpeed(speed);
@@ -177,7 +180,7 @@ class OmniVideoValue {
 
   bool get isInitialized {
     if (ctl.hasInitBeenCalled) {
-      if (Platform.isIOS) {
+      if (alwaysUseMediaKit || Platform.isIOS) {
         return iosInitialized;
       } else {
         return ctl.androidController.value.isInitialized;
@@ -188,7 +191,7 @@ class OmniVideoValue {
   }
 
   bool get isPlaying {
-    if (Platform.isIOS) {
+    if (alwaysUseMediaKit || Platform.isIOS) {
       return ctl.iosPlayer.state.playing;
     } else {
       return ctl.androidController.value.isPlaying;
@@ -196,7 +199,7 @@ class OmniVideoValue {
   }
 
   Duration get duration {
-    if (Platform.isIOS) {
+    if (alwaysUseMediaKit || Platform.isIOS) {
       return ctl.iosPlayer.state.duration;
     } else {
       return ctl.androidController.value.duration;
@@ -204,7 +207,7 @@ class OmniVideoValue {
   }
 
   Duration get position {
-    if (Platform.isIOS) {
+    if (alwaysUseMediaKit || Platform.isIOS) {
       return ctl.iosPlayer.state.position;
     } else {
       return ctl.androidController.value.position;
@@ -212,7 +215,7 @@ class OmniVideoValue {
   }
 
   Size get size {
-    if (Platform.isIOS) {
+    if (alwaysUseMediaKit || Platform.isIOS) {
       final w = ctl.iosPlayer.state.width ?? 100;
       final h = ctl.iosPlayer.state.height ?? 100;
       return Size(w.toDouble(), h.toDouble());
@@ -222,7 +225,7 @@ class OmniVideoValue {
   }
 
   double get aspectRatio {
-    if (Platform.isIOS) {
+    if (alwaysUseMediaKit || Platform.isIOS) {
       final w = ctl.iosPlayer.state.width ?? 100;
       final h = ctl.iosPlayer.state.height ?? 100;
       return w.toDouble() / h.toDouble();
@@ -233,7 +236,7 @@ class OmniVideoValue {
 
   // from 0 to 1
   double get volume {
-    if (Platform.isIOS) {
+    if (alwaysUseMediaKit || Platform.isIOS) {
       return ctl.iosPlayer.state.volume / 100.0;
     } else {
       return ctl.androidController.value.volume;
@@ -241,7 +244,7 @@ class OmniVideoValue {
   }
 
   double get playbackSpeed {
-    if (Platform.isIOS) {
+    if (alwaysUseMediaKit || Platform.isIOS) {
       return ctl.iosPlayer.state.rate;
     } else {
       return ctl.androidController.value.playbackSpeed;
@@ -249,7 +252,7 @@ class OmniVideoValue {
   }
 
   bool get isBuffering {
-    if (Platform.isIOS) {
+    if (alwaysUseMediaKit || Platform.isIOS) {
       return ctl.iosPlayer.state.buffering;
     } else {
       /// Gets the current buffering state of the video player.
@@ -283,7 +286,7 @@ class OmniVideoValue {
   }
 
   bool get hasError {
-    if (Platform.isIOS) {
+    if (alwaysUseMediaKit || Platform.isIOS) {
       return false;
     } else {
       return ctl.androidController.value.hasError;
@@ -291,7 +294,7 @@ class OmniVideoValue {
   }
 
   String? get errorDescription {
-    if (Platform.isIOS) {
+    if (alwaysUseMediaKit || Platform.isIOS) {
       return null;
     } else {
       return ctl.androidController.value.errorDescription;
