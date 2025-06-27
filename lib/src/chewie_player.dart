@@ -44,18 +44,19 @@ class ChewieState extends State<Chewie> {
   @override
   void initState() {
     super.initState();
-    if (Platform.isAndroid) {
-      widget.controller.videoPlayerController.addStateListener(() {
-        final newAspectRatio = widget.controller.videoPlayerController.value.aspectRatio;
-        if (mounted && newAspectRatio != exoAspectRatio) {
-          setState(() {
-            exoAspectRatio = newAspectRatio;
-          });
-        }
-      });
-    }
 
     widget.controller.videoPlayerController.initialize().then((_) {
+      if (Platform.isAndroid) {
+        widget.controller.videoPlayerController.addStateListener(() {
+          final newAspectRatio =
+              widget.controller.videoPlayerController.value.aspectRatio;
+          if (mounted && newAspectRatio != exoAspectRatio) {
+            setState(() {
+              exoAspectRatio = newAspectRatio;
+            });
+          }
+        });
+      }
       widget.controller.videoPlayerController.play();
     });
   }
