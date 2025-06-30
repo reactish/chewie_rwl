@@ -96,7 +96,7 @@ class ChewieState extends State<Chewie> {
             panEnabled: chewieController.zoomAndPan,
             scaleEnabled: chewieController.zoomAndPan,
             child:
-                alwaysUseMediaKit || Platform.isIOS
+                useMediaKit
                     ? media_kit_video.Video(
                       controller: chewieController.videoPlayerController.iosController,
                       controls: media_kit_video.NoVideoControls,
